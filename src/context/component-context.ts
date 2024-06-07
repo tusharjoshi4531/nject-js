@@ -1,14 +1,16 @@
-import {
-  ComponentNode,
-  ComponentNodeFactory,
-  Constructor,
-} from "../common/component-util";
+import { Constructor } from "../common/component-util";
 import { ComponentConstructorRepository } from "../repository/component-constructor-repository";
 import { ComponentObjectRepository } from "../repository/component-object-repository";
 
 export interface IComponentContext {
   getComponent(id: string): any;
   addComponentConstructor(id: string, constructor: Constructor): void;
+  getComponentConstructorParameters(id: string): Array<string>;
+  addComponentConstructorParameter(
+    id: string,
+    parameter: string,
+    parameterIndex: number
+  ): void;
   addDependancy(id: string, depencancyId: string): void;
   buildContext(): void;
 }
@@ -18,9 +20,28 @@ class ComponentContext implements IComponentContext {
   private componentConstructorRepository: ComponentConstructorRepository;
   private componentObjectRepository: ComponentObjectRepository;
 
-  constructor() {
-    this.componentConstructorRepository = new ComponentConstructorRepository();
-    this.componentObjectRepository = new ComponentObjectRepository();
+  constructor(
+    componentConstructorRepository: ComponentConstructorRepository,
+    componentObjectRepository: ComponentObjectRepository
+  ) {
+    this.componentConstructorRepository = componentConstructorRepository;
+    this.componentObjectRepository = componentObjectRepository;
+  }
+
+  public getComponentConstructorParameters(id: string) {
+    return this.componentConstructorRepository.findParametersById(id);
+  }
+
+  public addComponentConstructorParameter(
+    id: string,
+    parameter: string,
+    parameterIndex: number
+  ): void {
+    this.componentConstructorRepository.addParameterToId(
+      id,
+      parameter,
+      parameterIndex
+    );
   }
 
   public addComponentConstructor(id: string, constructor: Constructor): void {
@@ -37,9 +58,20 @@ class ComponentContext implements IComponentContext {
 
   public buildContext() {
     for (const id of this.componentConstructorRepository.findAllIdsInOrder()) {
+      
       const constructor =
         this.componentConstructorRepository.findConstructorById(id);
-      const obj = new constructor();
+      const parameters =
+        this.componentConstructorRepository.findParametersById(id);
+
+      
+
+      const assignedParameters = parameters.map((parameterId) =>
+        this.componentObjectRepository.findById(parameterId)
+      );
+      
+
+      const obj = new constructor(...assignedParameters);
 
       this.componentObjectRepository.create(id, obj);
     }

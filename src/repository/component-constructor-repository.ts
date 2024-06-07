@@ -3,15 +3,18 @@ import { Constructor } from "../common/component-util";
 export class ComponentConstructorRepository {
   private componentConstrutorMap: Map<string, Constructor>;
   private componentDependencyMap: Map<string, Array<string>>;
+  private componentConstructorParameters: Map<string, Array<[number, string]>>;
 
   constructor() {
     this.componentConstrutorMap = new Map();
     this.componentDependencyMap = new Map();
+    this.componentConstructorParameters = new Map();
   }
 
   public create(id: string, constructor: Constructor) {
     this.componentConstrutorMap.set(id, constructor);
     this.componentDependencyMap.set(id, []);
+    this.componentConstructorParameters.set(id, []);
   }
 
   public findConstructorById(id: string) {
@@ -26,11 +29,29 @@ export class ComponentConstructorRepository {
     return dependency;
   }
 
+  public findParametersById(id: string) {
+    const parameters = this.componentConstructorParameters.get(id);
+    if (!parameters) throw new Error(`Component of id ${id} does not exist`);
+    return parameters
+      .sort((a, b) => a[0] - b[0])
+      .map(([_, parameter]) => parameter);
+  }
+
   public addDependencyToId(id: string, dependancyId: string) {
     const dependancies = this.componentDependencyMap.get(id);
     if (!dependancies) throw new Error(`Component of id ${id} does not exist`);
 
     dependancies.push(dependancyId);
+  }
+
+  public addParameterToId(
+    id: string,
+    parameter: string,
+    parameterIndex: number
+  ) {
+    const parameters = this.componentConstructorParameters.get(id);
+    if (!parameters) throw new Error(`Component of id ${id} does not exist`);
+    parameters.push([parameterIndex, parameter]);
   }
 
   public *findAllIdsInOrder() {

@@ -6,18 +6,40 @@ import { Application } from "./src/server-api/application/application-decorator"
 import { RestController } from "./src/server-api/controller/rest-controller-decorator";
 import { ControllerParameter } from "./src/server-api/controller/rest-handler-parameter-decorator";
 import { ServerConfig } from "./src/server-api/server-config";
-import { RestHandler } from "./src/server-api/controller/rest-handler-decorator";
+import {
+  GET,
+  RestHandler,
+} from "./src/server-api/controller/rest-handler-decorator";
 import { HttpMethod } from "./src/common/http-util";
+import { Component } from "./src/server-api/component/component-decorator";
+import { Inject } from "./src/server-api/component/dependancy-injection-decorator";
+import applicationContext from "./src/context/application-context";
+import { createComponentIdFromConstructor } from "./src/common/id-util";
+
+@Component
+class TestService {
+  public sayHello() {
+    return "Hello from test";
+  }
+}
 
 @RestController("/test")
 class TestController {
-  @RestHandler()
-  GET(
-    @ControllerParameter(RouteHandlerParameter.REQUEST) req: Request,
-    @ControllerParameter(RouteHandlerParameter.RESPONSE) res: Response
-  ) {
-    console.log("Hello");
-    console.log(req);
+  private testService: TestService;
+  constructor(@Inject(TestService) testService: TestService) {
+    this.testService = testService;
+  }
+
+  @GET
+  public get() // @ControllerParameter(RouteHandlerParameter.REQUEST) req: any,
+  // @ControllerParameter(RouteHandlerParameter.RESPONSE) res: any
+  {
+    console.log("Hi");
+    try {
+      console.log("Hello " + this.testService.sayHello());
+    } catch (err) {
+      console.log(err);
+    }
   }
 }
 
@@ -27,3 +49,4 @@ class MainApplication extends ServerApplication {
     return ServerConfig.create().setPort(8000);
   }
 }
+

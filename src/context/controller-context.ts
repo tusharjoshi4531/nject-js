@@ -7,7 +7,13 @@ import {
 } from "../common/server-util";
 import { ControllerRepository } from "../repository/controller-repository";
 import { HandlerRepository } from "../repository/handler-repository";
-import { createControllerIdFromConstructor } from "../common/id-util";
+import {
+  createComponentIdFromClassName,
+  getClassFromFunctionId,
+  getFunctionKeyFromFunctionId,
+  rootControllerKey,
+} from "../common/id-util";
+import { ComponentObjectRepository } from "../repository/component-object-repository";
 export type RouteHandler = {
   handler: Function;
   parameters: [number, RouteHandlerParameter][];
@@ -15,20 +21,20 @@ export type RouteHandler = {
 
 export interface IControllerContext {
   addController(
-    constructor: Constructor,
+    constructorId: string,
     path: string,
-    parentController?: Constructor | null
+    parentControllerId?: string
   ): void;
-  getControllerPath(constructor: Constructor): string;
+  getControllerPath(constructorId: string): string;
 
   addHandler(
-    constructor: Constructor,
+    constructorId: string,
     method: HttpMethod,
-    fnKey: string,
+    fnId: string,
     fn: Function
   ): void;
   addHandlerParam(
-    fnKey: string,
+    fnId: string,
     param: RouteHandlerParameter,
     paramIndex: number
   ): void;
@@ -38,54 +44,48 @@ export interface IControllerContext {
 export class ControllerContext implements IControllerContext {
   private controllerRepository: ControllerRepository;
   private handlerRepository: HandlerRepository;
+  private componentObjectRepository: ComponentObjectRepository;
 
-  constructor() {
-    this.controllerRepository = new ControllerRepository();
-    this.handlerRepository = new HandlerRepository();
+  constructor(
+    controllerRepository: ControllerRepository,
+    handlerRepository: HandlerRepository,
+    componentObjectRepository: ComponentObjectRepository
+  ) {
+    this.controllerRepository = controllerRepository;
+    this.handlerRepository = handlerRepository;
+    this.componentObjectRepository = componentObjectRepository;
   }
 
   public addController(
-    constructor: Constructor,
+    constructorId: string,
     path: string,
-    parentController: Constructor | null = null
+    parentControllerId: string = rootControllerKey()
   ) {
-    const constructorId =
-      createControllerIdFromConstructor(constructor);
-    const parentId =
-      createControllerIdFromConstructor(parentController);
-
-    console.log(constructorId);
-
-    this.controllerRepository.createController(constructorId, path, parentId);
+    this.controllerRepository.createController(
+      constructorId,
+      path,
+      parentControllerId
+    );
   }
 
-  public getControllerPath(constructor: Constructor): string {
-    return this.controllerRepository.findPathById(
-      createControllerIdFromConstructor(constructor)
-    );
+  public getControllerPath(constructorId: string): string {
+    return this.controllerRepository.findPathById(constructorId);
   }
 
   public addHandler(
-    constructor: Constructor,
+    constructorId: string,
     method: HttpMethod,
-    fnKey: string,
-    fn: Function
+    fnId: string
   ): void {
-    this.handlerRepository.createHandler(fnKey, fn);
-    console.log({ constructor, method, fn });
-    this.controllerRepository.addHandlerToId(
-      createControllerIdFromConstructor(constructor),
-      method,
-      fnKey
-    );
+    this.controllerRepository.addHandlerToId(constructorId, method, fnId);
   }
 
   public addHandlerParam(
-    fnKey: string,
+    fnId: string,
     param: RouteHandlerParameter,
     paramIndex: number
   ): void {
-    this.handlerRepository.addParameters(fnKey, param, paramIndex);
+    this.handlerRepository.addParameters(fnId, param, paramIndex);
   }
 
   public getRouteHandlers() {
@@ -96,10 +96,16 @@ export class ControllerContext implements IControllerContext {
       const handlers = this.controllerRepository.findHandlersById(controllerId);
       const path = this.controllerRepository.findPathById(controllerId);
 
-      for (const [method, fnKeys] of handlers) {
-        const requestHandlers = fnKeys.map((fnKey) => {
-          const fn = this.handlerRepository.findHandlerById(fnKey);
-          const parameters = this.handlerRepository.findParametersById(fnKey);
+      for (const [method, fnIds] of handlers) {
+        const requestHandlers = fnIds.map((fnId) => {
+          const className = getClassFromFunctionId(fnId);
+          const classId = createComponentIdFromClassName(className);
+          const functionName = getFunctionKeyFromFunctionId(fnId);
+
+          const obj = this.componentObjectRepository.findById(classId);
+          const fn = obj[functionName].bind(obj);
+
+          const parameters = this.handlerRepository.findParametersById(fnId);
 
           const requestHandler = this.generateExpressHandlers(fn, parameters);
 

@@ -1,6 +1,6 @@
 import { RequestHandler } from "express";
 
-import { Constructor, ComponentNode } from "../common/component-util";
+import { Constructor } from "../common/component-util";
 import { ServerApplication } from "../server-api/application/application";
 import { ServerConfig } from "../server-api/server-config";
 import ComponentContext, { IComponentContext } from "./component-context";
@@ -8,10 +8,20 @@ import { ControllerContext, IControllerContext } from "./controller-context";
 import { IServerContext, ServerContext } from "./server-context";
 import { HttpMethod } from "../common/http-util";
 import { RouteHandlerParameter } from "../common/server-util";
+import { rootControllerKey } from "../common/id-util";
+import { ComponentConstructorRepository } from "../repository/component-constructor-repository";
+import { ComponentObjectRepository } from "../repository/component-object-repository";
+import { ControllerRepository } from "../repository/controller-repository";
+import { HandlerRepository } from "../repository/handler-repository";
 
 class ApplicationContext
   implements IComponentContext, IServerContext, IControllerContext
 {
+  private componentConstructorRepository: ComponentConstructorRepository;
+  private componentObjectRepository: ComponentObjectRepository;
+  private controllerRepository: ControllerRepository;
+  private handlerRepository: HandlerRepository;
+
   private componentContext: IComponentContext;
   private serverContext: IServerContext;
   private controllerContext: IControllerContext;
@@ -19,40 +29,56 @@ class ApplicationContext
   private serverApplication: ServerApplication | null;
 
   constructor() {
-    this.componentContext = new ComponentContext();
+    this.componentConstructorRepository = new ComponentConstructorRepository();
+    this.componentObjectRepository = new ComponentObjectRepository();
+    this.controllerRepository = new ControllerRepository();
+    this.handlerRepository = new HandlerRepository();
+
+    this.componentContext = new ComponentContext(
+      this.componentConstructorRepository,
+      this.componentObjectRepository
+    );
+    this.controllerContext = new ControllerContext(
+      this.controllerRepository,
+      this.handlerRepository,
+      this.componentObjectRepository
+    );
     this.serverContext = new ServerContext();
-    this.controllerContext = new ControllerContext();
 
     this.serverApplication = null;
   }
 
   public addController(
-    constructor: Constructor,
+    constructorId: string,
     path: string,
-    parentController: Constructor | null = null
+    parentControllerId: string = rootControllerKey()
   ): void {
-    this.controllerContext.addController(constructor, path, parentController);
+    this.controllerContext.addController(
+      constructorId,
+      path,
+      parentControllerId
+    );
   }
 
-  public getControllerPath(constructor: Constructor): string {
-    return this.controllerContext.getControllerPath(constructor);
+  public getControllerPath(constructorId: string): string {
+    return this.controllerContext.getControllerPath(constructorId);
   }
 
   public addHandler(
-    constructor: Constructor,
+    constructorId: string,
     method: HttpMethod,
-    fnKey: string,
+    fnId: string,
     fn: Function
   ): void {
-    return this.controllerContext.addHandler(constructor, method, fnKey, fn);
+    return this.controllerContext.addHandler(constructorId, method, fnId, fn);
   }
 
   public addHandlerParam(
-    fnKey: string,
+    fnId: string,
     param: RouteHandlerParameter,
     paramIndex: number
   ): void {
-    this.controllerContext.addHandlerParam(fnKey, param, paramIndex);
+    this.controllerContext.addHandlerParam(fnId, param, paramIndex);
   }
 
   public boot(): void {
@@ -68,7 +94,7 @@ class ApplicationContext
   }
 
   public getComponent(id: string) {
-    this.componentContext.getComponent(id);
+    return this.componentContext.getComponent(id);
   }
 
   public buildContext(): void {
@@ -79,11 +105,25 @@ class ApplicationContext
     this.componentContext.addComponentConstructor(id, constructor);
   }
 
-
   public addDependancy(id: string, depencancyId: string): void {
     this.componentContext.addDependancy(id, depencancyId);
   }
 
+  public getComponentConstructorParameters(id: string): string[] {
+    return this.componentContext.getComponentConstructorParameters(id);
+  }
+
+  public addComponentConstructorParameter(
+    id: string,
+    parameter: string,
+    parameterIndex: number
+  ): void {
+    this.componentContext.addComponentConstructorParameter(
+      id,
+      parameter,
+      parameterIndex
+    );
+  }
 
   public assignServerApplication(
     serverApplication: Constructor<ServerApplication>
