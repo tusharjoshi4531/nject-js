@@ -13,10 +13,12 @@ import {
   rootControllerKey,
 } from "../common/id-util";
 import { ComponentObjectRepository } from "../repository/component-object-repository";
+import { ServerResponse } from "../server-api/response/server-response";
 export type RouteHandler = {
   handler: Function;
   parameters: [number, RouteHandlerParameter][];
 };
+import { ServerError } from "../error/ServerError";
 
 export interface IControllerContext {
   addController(
@@ -128,13 +130,13 @@ export class ControllerContext implements IControllerContext {
         getPropertyFromRequestOrResponse(parameterType, req, res)
       );
 
-      try {
-        fn(...assignedParameters);
-      } catch (err) {
-        return res.status(400).json("ERROR");
+      const response: ServerResponse = fn(...assignedParameters);
+
+      if (response.IsError) {
+        next(new ServerError(response.Status, response.Body));
       }
 
-      return res.status(200).json("SUCCESS");
+      res.status(response.Status).json(response.Body);
     };
   }
 }

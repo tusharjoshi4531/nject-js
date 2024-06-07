@@ -16,6 +16,7 @@ import { Component } from "./src/server-api/component/component-decorator";
 import { Inject } from "./src/server-api/component/dependancy-injection-decorator";
 import applicationContext from "./src/context/application-context";
 import { createComponentIdFromConstructor } from "./src/common/id-util";
+import { ServerResponseOk } from "./src/server-api/response/server-response";
 
 @Component
 class TestService {
@@ -43,9 +44,12 @@ class TestController {
 
   @POST
   public post(
-    @ControllerParameter(RouteHandlerParameter.REQUEST_BODY) req: any
+    @ControllerParameter(RouteHandlerParameter.REQUEST_BODY)
+    body: {
+      num: number;
+    }
   ) {
-    console.log(req);
+    return new ServerResponseOk({ num: body.num * 2 });
   }
 }
 
