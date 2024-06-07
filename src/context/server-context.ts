@@ -32,6 +32,7 @@ export class ServerContext implements IServerContext {
     // routes
     for (const entry of routeHandlers.entries()) {
       const [[path, method], requestHandlers] = entry;
+      console.log({path, method, requestHandlers});
 
       this.routeWithMethod(path, method, requestHandlers);
     }

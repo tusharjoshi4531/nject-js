@@ -1,9 +1,11 @@
-import { Constructor } from "../common/component-util";
 import { HttpMethod } from "../common/http-util";
 import { rootControllerKey } from "../common/id-util";
 
 export class ControllerRepository {
-  private controllerHandlerMap: Map<string, Map<HttpMethod, string[]>>;
+  private controllerHandlerMap: Map<
+    string,
+    Map<[HttpMethod, string], Array<string>>
+  >;
   private controllerParentMap: Map<string, string>;
   private controllerPathMap: Map<string, string>;
 
@@ -69,17 +71,18 @@ export class ControllerRepository {
   public addHandlerToId(
     controllerId: string,
     method: HttpMethod,
-    handlerId: string
+    handlerId: string,
+    path: string = ""
   ) {
     const methods = this.controllerHandlerMap.get(controllerId);
     if (!methods)
       throw new Error(`Controller does not exist with id ${controllerId}`);
 
-    const handlers = methods.get(method);
+    const handlers = methods.get([method, path]);
     if (handlers) {
       handlers.push(handlerId);
     } else {
-      methods.set(method, [handlerId]);
+      methods.set([method, path], [handlerId]);
     }
   }
 }

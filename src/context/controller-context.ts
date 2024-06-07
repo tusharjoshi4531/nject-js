@@ -32,7 +32,7 @@ export interface IControllerContext {
     constructorId: string,
     method: HttpMethod,
     fnId: string,
-    fn: Function
+    path: string
   ): void;
   addHandlerParam(
     fnId: string,
@@ -76,9 +76,12 @@ export class ControllerContext implements IControllerContext {
   public addHandler(
     constructorId: string,
     method: HttpMethod,
-    fnId: string
+    fnId: string,
+    path: string
   ): void {
-    this.controllerRepository.addHandlerToId(constructorId, method, fnId);
+    this.handlerRepository.addHandler(fnId, path);
+    this.controllerRepository.addHandlerToId(constructorId, method, fnId, path);
+    console.log({ h_repo: this.handlerRepository });
   }
 
   public addHandlerParam(
@@ -95,9 +98,13 @@ export class ControllerContext implements IControllerContext {
 
     for (const controllerId of this.controllerRepository.findAllId()) {
       const handlers = this.controllerRepository.findHandlersById(controllerId);
-      const path = this.controllerRepository.findPathById(controllerId);
+      console.log({handlers});
+      const controllerPath =
+        this.controllerRepository.findPathById(controllerId);
 
-      for (const [method, fnIds] of handlers) {
+      for (const [[method, handlerPath], fnIds] of handlers) {
+        console.log({handlerPath});
+
         const requestHandlers = fnIds.map((fnId) => {
           const className = getClassFromFunctionId(fnId);
           const classId = createComponentIdFromClassName(className);
@@ -113,6 +120,7 @@ export class ControllerContext implements IControllerContext {
           return requestHandler;
         });
 
+        const path = controllerPath + handlerPath;
         expressRouteHandlers.set([path, method], requestHandlers);
       }
     }

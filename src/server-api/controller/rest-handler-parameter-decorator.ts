@@ -25,3 +25,4 @@ export function ControllerParameter(parameterType: RouteHandlerParameter) {
 export const RequestObject = ControllerParameter(RouteHandlerParameter.REQUEST);
 export const RequestBody = ControllerParameter(RouteHandlerParameter.REQUEST_BODY);
 export const RequestQuery = ControllerParameter(RouteHandlerParameter.REQUSET_QUERY);
+export const RequestParams = ControllerParameter(RouteHandlerParameter.REQUEST_PARAMS);

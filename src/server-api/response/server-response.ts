@@ -50,8 +50,8 @@ export class ServerResponseCreated extends ServerResponse {
 }
 
 export class ServerResponseNoContent extends ServerResponse {
-  constructor(body: any) {
-    super(HttpStatusCode.NO_CONTENT, body);
+  constructor() {
+    super(HttpStatusCode.NO_CONTENT, {});
   }
 }
 

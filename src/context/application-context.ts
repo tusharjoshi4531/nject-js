@@ -68,9 +68,9 @@ class ApplicationContext
     constructorId: string,
     method: HttpMethod,
     fnId: string,
-    fn: Function
+    path: string
   ): void {
-    return this.controllerContext.addHandler(constructorId, method, fnId, fn);
+    return this.controllerContext.addHandler(constructorId, method, fnId, path);
   }
 
   public addHandlerParam(

@@ -18,7 +18,7 @@ export function RestController(
     applicationContext.addController(constructorId, path, parentControllerId);
     
     const callStack = (constructor as any).__callStack;
-    while (callStack.length) {
+    while (callStack && callStack.length) {
       callStack[callStack.length - 1]();
       callStack.pop();
     }
