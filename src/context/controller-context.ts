@@ -1,5 +1,4 @@
 import { RequestHandler } from "express";
-import { Constructor } from "../common/component-util";
 import { HttpMethod } from "../common/http-util";
 import {
   RouteHandlerParameter,

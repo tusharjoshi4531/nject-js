@@ -19,6 +19,8 @@ export class ServerContext implements IServerContext {
   }
 
   public boot(routeHandlers: Map<[string, HttpMethod], RequestHandler[]>) {
+    this.app.use(express.json());
+
     this.app.use(
       cors({
         origin: this.getServerConfig().corsOrigins,

@@ -8,6 +8,7 @@ import { ControllerParameter } from "./src/server-api/controller/rest-handler-pa
 import { ServerConfig } from "./src/server-api/server-config";
 import {
   GET,
+  POST,
   RestHandler,
 } from "./src/server-api/controller/rest-handler-decorator";
 import { HttpMethod } from "./src/common/http-util";
@@ -31,15 +32,20 @@ class TestController {
   }
 
   @GET
-  public get() // @ControllerParameter(RouteHandlerParameter.REQUEST) req: any,
-  // @ControllerParameter(RouteHandlerParameter.RESPONSE) res: any
-  {
+  public get() {
     console.log("Hi");
     try {
       console.log("Hello " + this.testService.sayHello());
     } catch (err) {
       console.log(err);
     }
+  }
+
+  @POST
+  public post(
+    @ControllerParameter(RouteHandlerParameter.REQUEST_BODY) req: any
+  ) {
+    console.log(req);
   }
 }
 
@@ -49,4 +55,3 @@ class MainApplication extends ServerApplication {
     return ServerConfig.create().setPort(8000);
   }
 }
-

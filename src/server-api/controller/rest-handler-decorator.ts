@@ -17,6 +17,7 @@ export function RestHandler(method: HttpMethod = HttpMethod.GET) {
 
     const fnId = createFunctionId(target, propertyKey);
     const controllerId = createControllerIdFromConstructor(target);
+    console.log({descriptor})
 
     if (!target.__callStack) {
       target.__callStack = [];
