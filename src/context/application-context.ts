@@ -1,5 +1,3 @@
-import { RequestHandler } from "express";
-
 import { Constructor } from "../common/component-util";
 import { ServerApplication } from "../server-api/application/application";
 import { ServerConfig } from "../server-api/server-config";
@@ -70,7 +68,21 @@ class ApplicationContext
     fnId: string,
     path: string
   ): void {
-    return this.controllerContext.addHandler(constructorId, method, fnId, path);
+    this.controllerContext.addHandler(constructorId, method, fnId, path);
+  }
+
+  public addMiddlewareHandler(
+    constructorId: string,
+    method: HttpMethod,
+    fnId: string,
+    path: string
+  ): void {
+    this.controllerContext.addMiddlewareHandler(
+      constructorId,
+      method,
+      fnId,
+      path
+    );
   }
 
   public addHandlerParam(
@@ -141,7 +153,7 @@ class ApplicationContext
     return this.serverApplication;
   }
 
-  public getRouteHandlers(): Map<[string, HttpMethod], RequestHandler[]> {
+  public getRouteHandlers() {
     return this.controllerContext.getRouteHandlers();
   }
 }

@@ -1,11 +1,17 @@
 import { HttpMethod } from "../common/http-util";
-import { rootControllerKey } from "../common/id-util";
+import {
+  createKeyPair,
+  getKeyPairValue,
+  rootControllerKey,
+} from "../common/id-util";
 
 export class ControllerRepository {
-  private controllerHandlerMap: Map<
+  private controllerHandlerMap: Map<string, Map<string, string>>;
+  private controllerMiddlewareMap: Map<
     string,
-    Map<[HttpMethod, string], Array<string>>
+    Map<string, Array<[number, string]>>
   >;
+
   private controllerParentMap: Map<string, string>;
   private controllerPathMap: Map<string, string>;
 
@@ -13,10 +19,12 @@ export class ControllerRepository {
     this.controllerHandlerMap = new Map();
     this.controllerParentMap = new Map();
     this.controllerPathMap = new Map();
+    this.controllerMiddlewareMap = new Map();
 
     this.controllerParentMap.set(rootControllerKey(), rootControllerKey());
     this.controllerPathMap.set(rootControllerKey(), "");
     this.controllerHandlerMap.set(rootControllerKey(), new Map());
+    this.controllerMiddlewareMap.set(rootControllerKey(), new Map());
   }
 
   public createController(
@@ -27,6 +35,7 @@ export class ControllerRepository {
     this.controllerPathMap.set(id, path);
     this.controllerHandlerMap.set(id, new Map());
     this.controllerParentMap.set(id, parent);
+    this.controllerMiddlewareMap.set(id, new Map());
   }
 
   public findParentById(id: string) {
@@ -63,8 +72,26 @@ export class ControllerRepository {
   }
 
   public findHandlersById(id: string) {
-    const handlers = this.controllerHandlerMap.get(id);
-    if (!handlers) throw new Error(`Controller does not exist with id ${id}`);
+    const handlers = new Map<string, Array<string>>();
+    const controllerMethods = this.controllerHandlerMap.get(id);
+    const middleWareMethods = this.controllerMiddlewareMap.get(id);
+
+    if (!controllerMethods || !middleWareMethods)
+      throw new Error(`Controller does not exist with id ${id}`);
+
+    for (const key of controllerMethods.keys()) {
+      const [method, path] = getKeyPairValue(key);
+      const contrllerHandler = controllerMethods.get(key);
+      if (!contrllerHandler) throw new Error(`Controller not found`);
+
+      const middlewarHandlers = middleWareMethods.get(key) ?? [];
+      const sortedMiddlewareHandlers = middlewarHandlers
+        .sort((a, b) => a[0] - b[0])
+        .map(([_, x]) => x);
+
+      handlers.set(key, [...sortedMiddlewareHandlers, contrllerHandler]);
+    }
+
     return handlers;
   }
 
@@ -74,15 +101,37 @@ export class ControllerRepository {
     handlerId: string,
     path: string = ""
   ) {
+    const key = createKeyPair(method, path);
+
     const methods = this.controllerHandlerMap.get(controllerId);
     if (!methods)
       throw new Error(`Controller does not exist with id ${controllerId}`);
 
-    const handlers = methods.get([method, path]);
-    if (handlers) {
-      handlers.push(handlerId);
-    } else {
-      methods.set([method, path], [handlerId]);
+    if (methods.has(key)) {
+      console.warn("Overriding controller of " + [method, path]);
     }
+
+    methods.set(key, handlerId);
+  }
+
+  public addMiddleWareToId(
+    controllerId: string,
+    method: HttpMethod,
+    middlewareId: string,
+    path: string = "",
+    order: number = 0
+  ) {
+    const key = createKeyPair(method, path);
+    const methods = this.controllerMiddlewareMap.get(controllerId);
+    if (!methods)
+      throw new Error(`Controller does not exist with id ${controllerId}`);
+
+    if (!methods.has(key)) {
+      methods.set(key, []);
+    }
+
+    const middlewares = methods.get(key);
+
+    middlewares?.push([order, middlewareId]);
   }
 }

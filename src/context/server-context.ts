@@ -2,9 +2,10 @@ import express, { RequestHandler } from "express";
 import cors from "cors";
 import { ServerConfig } from "../server-api/server-config";
 import { HttpMethod } from "../common/http-util";
+import { getKeyPairValue } from "../common/id-util";
 
 export interface IServerContext {
-  boot(routeHandlers: Map<[string, string], RequestHandler[]>): void;
+  boot(routeHandlers: Map<string, RequestHandler[]>): void;
   getServerConfig(): ServerConfig;
   setServerConfig(config: ServerConfig): void;
 }
@@ -18,7 +19,7 @@ export class ServerContext implements IServerContext {
     this.serverConfig = new ServerConfig();
   }
 
-  public boot(routeHandlers: Map<[string, HttpMethod], RequestHandler[]>) {
+  public boot(routeHandlers: Map<string, RequestHandler[]>) {
     this.app.use(express.json());
 
     this.app.use(
@@ -31,8 +32,14 @@ export class ServerContext implements IServerContext {
 
     // routes
     for (const entry of routeHandlers.entries()) {
-      const [[path, method], requestHandlers] = entry;
-      console.log({path, method, requestHandlers});
+      const [key, requestHandlers] = entry;
+      const [methodString, path] = getKeyPairValue(key);
+      const method = methodString as HttpMethod;
+
+      console.log({
+        method,
+        path,
+      });
 
       this.routeWithMethod(path, method, requestHandlers);
     }

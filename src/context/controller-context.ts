@@ -8,8 +8,10 @@ import { ControllerRepository } from "../repository/controller-repository";
 import { HandlerRepository } from "../repository/handler-repository";
 import {
   createComponentIdFromClassName,
+  createKeyPair,
   getClassFromFunctionId,
   getFunctionKeyFromFunctionId,
+  getKeyPairValue,
   rootControllerKey,
 } from "../common/id-util";
 import { ComponentObjectRepository } from "../repository/component-object-repository";
@@ -19,6 +21,7 @@ export type RouteHandler = {
   parameters: [number, RouteHandlerParameter][];
 };
 import { ServerError } from "../error/ServerError";
+import { MiddleWareResponse } from "../server-api/response/middleware-response";
 
 export interface IControllerContext {
   addController(
@@ -34,12 +37,18 @@ export interface IControllerContext {
     fnId: string,
     path: string
   ): void;
+  addMiddlewareHandler(
+    constructorId: string,
+    method: HttpMethod,
+    fnId: string,
+    path: string
+  ): void;
   addHandlerParam(
     fnId: string,
     param: RouteHandlerParameter,
     paramIndex: number
   ): void;
-  getRouteHandlers(): Map<[string, HttpMethod], RequestHandler[]>;
+  getRouteHandlers(): Map<string, RequestHandler[]>;
 }
 
 export class ControllerContext implements IControllerContext {
@@ -84,6 +93,21 @@ export class ControllerContext implements IControllerContext {
     console.log({ h_repo: this.handlerRepository });
   }
 
+  public addMiddlewareHandler(
+    constructorId: string,
+    method: HttpMethod,
+    fnId: string,
+    path: string
+  ): void {
+    this.handlerRepository.addHandler(fnId, path);
+    this.controllerRepository.addMiddleWareToId(
+      constructorId,
+      method,
+      fnId,
+      path
+    );
+  }
+
   public addHandlerParam(
     fnId: string,
     param: RouteHandlerParameter,
@@ -93,17 +117,16 @@ export class ControllerContext implements IControllerContext {
   }
 
   public getRouteHandlers() {
-    const expressRouteHandlers: Map<[string, HttpMethod], RequestHandler[]> =
-      new Map();
+    const expressRouteHandlers: Map<string, RequestHandler[]> = new Map();
 
     for (const controllerId of this.controllerRepository.findAllId()) {
       const handlers = this.controllerRepository.findHandlersById(controllerId);
-      console.log({handlers});
+      console.log({ handlers });
       const controllerPath =
         this.controllerRepository.findPathById(controllerId);
 
-      for (const [[method, handlerPath], fnIds] of handlers) {
-        console.log({handlerPath});
+      for (const [key, fnIds] of handlers) {
+        const [method, handlerPath] = getKeyPairValue(key);
 
         const requestHandlers = fnIds.map((fnId) => {
           const className = getClassFromFunctionId(fnId);
@@ -116,12 +139,11 @@ export class ControllerContext implements IControllerContext {
           const parameters = this.handlerRepository.findParametersById(fnId);
 
           const requestHandler = this.generateExpressHandlers(fn, parameters);
-
           return requestHandler;
         });
 
         const path = controllerPath + handlerPath;
-        expressRouteHandlers.set([path, method], requestHandlers);
+        expressRouteHandlers.set(createKeyPair(method, path), requestHandlers);
       }
     }
 
@@ -133,12 +155,24 @@ export class ControllerContext implements IControllerContext {
     fn: Function,
     parameters: RouteHandlerParameter[]
   ): RequestHandler {
-    return (req, res, next) => {
+    return (req: any, res: any, next) => {
       const assignedParameters = parameters.map((parameterType) =>
         getPropertyFromRequestOrResponse(parameterType, req, res)
       );
 
-      const response: ServerResponse = fn(...assignedParameters);
+      const response: ServerResponse | MiddleWareResponse = fn(
+        ...assignedParameters
+      );
+
+      if (response instanceof MiddleWareResponse) {
+        const requestExtension = response.RequestExtention as any;
+
+        for (const key of Object.keys(requestExtension)) {
+          req[key.toString()] = requestExtension[key.toString()];
+        }
+
+        return next();
+      }
 
       if (response.IsError) {
         next(new ServerError(response.Status, response.Body));

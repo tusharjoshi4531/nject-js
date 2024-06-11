@@ -16,7 +16,6 @@ export function RestHandler(
     descriptor: PropertyDescriptor
   ) {
     const target = targetPrototype.constructor;
-    const controller = descriptor.value;
 
     const fnId = createFunctionId(target, propertyKey);
     const controllerId = createControllerIdFromConstructor(target);

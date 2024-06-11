@@ -1,6 +1,6 @@
 import { HttpStatusCode } from "../../common/http-util";
 
-export enum ResponseCatagory {
+export enum ResponseCategory {
   INFO = 100,
   OK = 200,
   REDIRECT = 300,
@@ -9,20 +9,17 @@ export enum ResponseCatagory {
 }
 
 export class ServerResponse {
-  private status: number;
-  private body: any;
-
-  constructor(status: number, body: any) {
-    this.status = status;
-    this.body = body;
-  }
+  constructor(
+    private status: number,
+    private body: any,
+  ) {}
 
   public get Status() {
     return this.status;
   }
 
-  public get Catagory() {
-    return (this.status - (this.status % 100)) as ResponseCatagory;
+  public get Category() {
+    return (this.status - (this.status % 100)) as ResponseCategory;
   }
 
   public get Body() {
@@ -31,50 +28,36 @@ export class ServerResponse {
 
   public get IsError() {
     return (
-      this.Catagory === ResponseCatagory.CLIENT_ERROR ||
-      this.Catagory === ResponseCatagory.SERVER_ERROR
+      this.Category === ResponseCategory.CLIENT_ERROR ||
+      this.Category === ResponseCategory.SERVER_ERROR
     );
   }
-}
 
-export class ServerResponseOk extends ServerResponse {
-  constructor(body: any) {
-    super(HttpStatusCode.OK, body);
+  public static OK(body: any) {
+    return new ServerResponse(HttpStatusCode.OK, body);
   }
-}
 
-export class ServerResponseCreated extends ServerResponse {
-  constructor(body: any) {
-    super(HttpStatusCode.CREATED, body);
+  public static Created(body: any) {
+    return new ServerResponse(HttpStatusCode.CREATED, body);
   }
-}
 
-export class ServerResponseNoContent extends ServerResponse {
-  constructor() {
-    super(HttpStatusCode.NO_CONTENT, {});
+  public static NoContent() {
+    return new ServerResponse(HttpStatusCode.NO_CONTENT, {});
   }
-}
 
-export class ServerResponseBadRequest extends ServerResponse {
-  constructor(body: any) {
-    super(HttpStatusCode.BAD_REQUEST, body);
+  public static BadRequest(body: any) {
+    return new ServerResponse(HttpStatusCode.BAD_REQUEST, body);
   }
-}
 
-export class ServerResponseUnAuthorized extends ServerResponse {
-  constructor(body: any) {
-    super(HttpStatusCode.UNAUTHORIZED, body);
+  public static Unauthorized(body: any) {
+    return new ServerResponse(HttpStatusCode.UNAUTHORIZED, body);
   }
-}
 
-export class ServerResponseFormidden extends ServerResponse {
-  constructor(body: any) {
-    super(HttpStatusCode.FORBIDDEN, body);
+  public static Forbidden(body: any) {
+    return new ServerResponse(HttpStatusCode.FORBIDDEN, body);
   }
-}
 
-export class ServerResponseNotFound extends ServerResponse {
-  constructor(body: any) {
-    super(HttpStatusCode.NOT_FOUND, body);
+  public static NotFound(body: any) {
+    return new ServerResponse(HttpStatusCode.NOT_FOUND, body);
   }
 }
