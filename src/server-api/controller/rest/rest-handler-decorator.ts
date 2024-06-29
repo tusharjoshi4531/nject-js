@@ -1,10 +1,10 @@
-import applicationContext from "../../context/application-context";
-import { HttpMethod } from "../../common/http-util";
-import { HandlerRepository } from "../../repository/handler-repository";
+import applicationContext from "../../../context/application-context";
+import { HttpMethod } from "../../../common/http-util";
+import { HandlerRepository } from "../../../repository/handler-repository";
 import {
   createControllerIdFromConstructor,
   createFunctionId,
-} from "../../common/id-util";
+} from "../../../common/id-util";
 
 export function RestHandler(
   method: HttpMethod = HttpMethod.GET,

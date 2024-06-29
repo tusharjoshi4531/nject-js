@@ -80,7 +80,6 @@ export class ControllerRepository {
       throw new Error(`Controller does not exist with id ${id}`);
 
     for (const key of controllerMethods.keys()) {
-      const [method, path] = getKeyPairValue(key);
       const contrllerHandler = controllerMethods.get(key);
       if (!contrllerHandler) throw new Error(`Controller not found`);
 

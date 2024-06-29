@@ -1,16 +1,17 @@
-import { ServerApplication } from "./src/server-api/application/application";
+import { ExpressApplication } from "./src/server-api/application/application";
 import { Application } from "./src/server-api/application/application-decorator";
-import { RestController } from "./src/server-api/controller/rest-controller-decorator";
+import { RestController } from "./src/server-api/controller/rest/rest-controller-decorator";
 
 import { ServerConfig } from "./src/server-api/server-config";
-import { GET } from "./src/server-api/controller/rest-handler-decorator";
+import { GET } from "./src/server-api/controller/rest/rest-handler-decorator";
 
 import { ServerResponse } from "./src/server-api/response/server-response";
 import { MiddleWareResponse } from "./src/server-api/response/middleware-response";
 import {
   Middleware,
   MiddlewareRoute,
-} from "./src/server-api/controller/rest-middleware-decorator";
+} from "./src/server-api/controller/rest/rest-middleware-decorator";
+import { Express } from "express";
 
 @RestController("/test")
 class TestController {
@@ -24,16 +25,27 @@ class TestController {
     return ServerResponse.OK("Tell");
   }
 
-  @Middleware([MiddlewareRoute.GET(""), MiddlewareRoute.GET("/1")])
+  @Middleware([MiddlewareRoute.GET(""), MiddlewareRoute.GET("/1", 10)])
   public b() {
     console.log("Middleware");
+    return MiddleWareResponse.NoExtend();
+  }
+
+  @Middleware([MiddlewareRoute.GET("", 10), MiddlewareRoute.GET("/1", 1)])
+  public d() {
+    console.log("Middleware2");
     return MiddleWareResponse.NoExtend();
   }
 }
 
 @Application
-class MainApplication extends ServerApplication {
-  public get Config() {
+class MainApplication extends ExpressApplication {
+  public override get Config() {
     return ServerConfig.create().setPort(8000);
+  }
+
+  public override preConfigExpress(app: Express): void {
+    console.log("wohohs")
+    app.get("/pre", (req, res) => res.status(200).json("Done"));
   }
 }

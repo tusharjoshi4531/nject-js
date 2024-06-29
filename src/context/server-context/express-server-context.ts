@@ -1,23 +1,23 @@
 import express, { RequestHandler } from "express";
+import http from "http";
 import cors from "cors";
-import { ServerConfig } from "../server-api/server-config";
-import { HttpMethod } from "../common/http-util";
-import { getKeyPairValue } from "../common/id-util";
+import { ServerConfig } from "../../server-api/server-config";
+import { HttpMethod } from "../../common/http-util";
+import { getKeyPairValue } from "../../common/id-util";
 
-export interface IServerContext {
-  boot(routeHandlers: Map<string, RequestHandler[]>): void;
+export interface IExpressServerContext {
+  boot(routeHandlers: Map<string, RequestHandler[]>): http.Server;
   getServerConfig(): ServerConfig;
   setServerConfig(config: ServerConfig): void;
+  setPreconfigCb(cb: (app: express.Express) => void): void;
 }
 
-export class ServerContext implements IServerContext {
-  private app: express.Express;
-  private serverConfig: ServerConfig;
-
-  constructor() {
-    this.app = express();
-    this.serverConfig = new ServerConfig();
-  }
+export class ExpressServerContext implements IExpressServerContext {
+  constructor(
+    private app: express.Express = express(),
+    private serverConfig: ServerConfig = new ServerConfig(),
+    private preConfigCb: (app: express.Express) => void = () => {}
+  ) {}
 
   public boot(routeHandlers: Map<string, RequestHandler[]>) {
     this.app.use(express.json());
@@ -29,6 +29,8 @@ export class ServerContext implements IServerContext {
         allowedHeaders: this.getServerConfig().allowedHeaders,
       })
     );
+
+    this.preConfigCb(this.app);
 
     // routes
     for (const entry of routeHandlers.entries()) {
@@ -44,9 +46,12 @@ export class ServerContext implements IServerContext {
       this.routeWithMethod(path, method, requestHandlers);
     }
 
-    this.app.listen(this.getServerConfig().port, () => {
+    const httpServer = http.createServer(this.app);
+    httpServer.listen(this.getServerConfig().port, () => {
       console.log(`Server is running at ${this.getServerConfig().port}`);
     });
+
+    return httpServer;
   }
 
   public getServerConfig() {
@@ -57,6 +62,10 @@ export class ServerContext implements IServerContext {
     this.serverConfig = config;
   }
 
+  setPreconfigCb(cb: (app: express.Express) => void): void {
+    this.preConfigCb = cb;
+  }
+
   private routeWithMethod(
     path: string,
     method: HttpMethod = HttpMethod.GET,
@@ -64,21 +73,21 @@ export class ServerContext implements IServerContext {
   ) {
     switch (method) {
       case HttpMethod.GET:
-        return this.app.get(path, ...handlers);
+        return this.app.get(path, handlers);
       case HttpMethod.POST:
-        return this.app.post(path, ...handlers);
+        return this.app.post(path, handlers);
       case HttpMethod.DELETE:
-        return this.app.delete(path, ...handlers);
+        return this.app.delete(path, handlers);
       case HttpMethod.PATCH:
-        return this.app.patch(path, ...handlers);
+        return this.app.patch(path, handlers);
       case HttpMethod.PUT:
-        return this.app.put(path, ...handlers);
+        return this.app.put(path, handlers);
       case HttpMethod.OPTIONS:
-        return this.app.options(path, ...handlers);
+        return this.app.options(path, handlers);
       case HttpMethod.HEAD:
-        return this.app.head(path, ...handlers);
+        return this.app.head(path, handlers);
       case HttpMethod.ALL:
-        return this.app.all(path, ...handlers);
+        return this.app.all(path, handlers);
       default:
         throw new Error("Method does not exist");
     }

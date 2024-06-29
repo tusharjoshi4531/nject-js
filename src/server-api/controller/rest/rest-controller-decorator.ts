@@ -1,7 +1,7 @@
-import { Constructor } from "../../common/component-util";
-import { Component } from "../component/component-decorator";
-import applicationContext from "../../context/application-context";
-import { createControllerIdFromConstructor } from "../../common/id-util";
+import { Constructor } from "../../../common/component-util";
+import { Component } from "../../component/component-decorator";
+import applicationContext from "../../../context/application-context";
+import { createControllerIdFromConstructor } from "../../../common/id-util";
 
 export function RestController(
   path: string = "",

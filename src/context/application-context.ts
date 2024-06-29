@@ -1,9 +1,12 @@
 import { Constructor } from "../common/component-util";
-import { ServerApplication } from "../server-api/application/application";
+import { ExpressApplication } from "../server-api/application/application";
 import { ServerConfig } from "../server-api/server-config";
 import ComponentContext, { IComponentContext } from "./component-context";
 import { ControllerContext, IControllerContext } from "./controller-context";
-import { IServerContext, ServerContext } from "./server-context";
+import {
+  ExpressServerContext,
+  IExpressServerContext,
+} from "./server-context/express-server-context";
 import { HttpMethod } from "../common/http-util";
 import { RouteHandlerParameter } from "../common/server-util";
 import { rootControllerKey } from "../common/id-util";
@@ -11,20 +14,19 @@ import { ComponentConstructorRepository } from "../repository/component-construc
 import { ComponentObjectRepository } from "../repository/component-object-repository";
 import { ControllerRepository } from "../repository/controller-repository";
 import { HandlerRepository } from "../repository/handler-repository";
+import { Express } from "express";
 
-class ApplicationContext
-  implements IComponentContext, IServerContext, IControllerContext
-{
+class ApplicationContext implements IComponentContext, IControllerContext {
   private componentConstructorRepository: ComponentConstructorRepository;
   private componentObjectRepository: ComponentObjectRepository;
   private controllerRepository: ControllerRepository;
   private handlerRepository: HandlerRepository;
 
   private componentContext: IComponentContext;
-  private serverContext: IServerContext;
+  private expressContext: IExpressServerContext;
   private controllerContext: IControllerContext;
 
-  private serverApplication: ServerApplication | null;
+  private expressServerApplication: ExpressApplication | null;
 
   constructor() {
     this.componentConstructorRepository = new ComponentConstructorRepository();
@@ -41,9 +43,9 @@ class ApplicationContext
       this.handlerRepository,
       this.componentObjectRepository
     );
-    this.serverContext = new ServerContext();
+    this.expressContext = new ExpressServerContext();
 
-    this.serverApplication = null;
+    this.expressServerApplication = null;
   }
 
   public addController(
@@ -75,13 +77,15 @@ class ApplicationContext
     constructorId: string,
     method: HttpMethod,
     fnId: string,
-    path: string
+    path: string,
+    order: number = 0
   ): void {
     this.controllerContext.addMiddlewareHandler(
       constructorId,
       method,
       fnId,
-      path
+      path,
+      order
     );
   }
 
@@ -93,16 +97,13 @@ class ApplicationContext
     this.controllerContext.addHandlerParam(fnId, param, paramIndex);
   }
 
-  public boot(): void {
-    this.serverContext.boot(this.controllerContext.getRouteHandlers());
-  }
-
-  public getServerConfig(): ServerConfig {
-    return this.serverContext.getServerConfig();
-  }
-
-  public setServerConfig(config: ServerConfig): void {
-    this.serverContext.setServerConfig(config);
+  public boot() {
+    if (this.expressServerApplication) {
+      this.expressContext.setServerConfig(this.expressServerApplication.Config);
+      this.expressContext.setPreconfigCb((e) =>
+        this.expressServerApplication?.preConfigExpress(e)
+      );
+    }
   }
 
   public getComponent(id: string) {
@@ -137,20 +138,20 @@ class ApplicationContext
     );
   }
 
-  public assignServerApplication(
-    serverApplication: Constructor<ServerApplication>
+  public assignExpressServerApplication(
+    expressServerApplication: Constructor<ExpressApplication>
   ) {
-    if (this.serverApplication) {
+    if (this.expressServerApplication) {
       throw new Error("Server application already exists");
     }
-    this.serverApplication = new serverApplication();
+    this.expressServerApplication = new expressServerApplication();
   }
 
   public getServerApplication() {
-    if (!this.serverApplication) {
+    if (!this.expressServerApplication) {
       throw new Error("No server application assigned");
     }
-    return this.serverApplication;
+    return this.expressServerApplication;
   }
 
   public getRouteHandlers() {

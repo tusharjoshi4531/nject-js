@@ -41,7 +41,8 @@ export interface IControllerContext {
     constructorId: string,
     method: HttpMethod,
     fnId: string,
-    path: string
+    path: string,
+    order: number
   ): void;
   addHandlerParam(
     fnId: string,
@@ -97,14 +98,16 @@ export class ControllerContext implements IControllerContext {
     constructorId: string,
     method: HttpMethod,
     fnId: string,
-    path: string
+    path: string,
+    order: number = 0
   ): void {
     this.handlerRepository.addHandler(fnId, path);
     this.controllerRepository.addMiddleWareToId(
       constructorId,
       method,
       fnId,
-      path
+      path,
+      order
     );
   }
 
@@ -135,6 +138,9 @@ export class ControllerContext implements IControllerContext {
 
           const obj = this.componentObjectRepository.findById(classId);
           const fn = obj[functionName].bind(obj);
+
+          console.log(controllerPath + handlerPath, method);
+          fn();
 
           const parameters = this.handlerRepository.findParametersById(fnId);
 
