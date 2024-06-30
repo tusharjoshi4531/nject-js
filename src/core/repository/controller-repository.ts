@@ -1,9 +1,9 @@
-import { HttpMethod } from "../common/http-util";
+import { HttpMethod } from "../../common/http-util";
 import {
   createKeyPair,
   getKeyPairValue,
   rootControllerKey,
-} from "../common/id-util";
+} from "../../common/id-util";
 
 export class ControllerRepository {
   private controllerHandlerMap: Map<string, Map<string, string>>;

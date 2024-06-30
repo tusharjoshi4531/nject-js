@@ -1,9 +1,9 @@
 import { RequestHandler } from "express";
-import { HttpMethod } from "../common/http-util";
+import { HttpMethod } from "../../common/http-util";
 import {
   RouteHandlerParameter,
   getPropertyFromRequestOrResponse,
-} from "../common/server-util";
+} from "../../common/server-util";
 import { ControllerRepository } from "../repository/controller-repository";
 import { HandlerRepository } from "../repository/handler-repository";
 import {
@@ -13,15 +13,15 @@ import {
   getFunctionKeyFromFunctionId,
   getKeyPairValue,
   rootControllerKey,
-} from "../common/id-util";
+} from "../../common/id-util";
 import { ComponentObjectRepository } from "../repository/component-object-repository";
-import { ServerResponse } from "../server-api/response/server-response";
+import { ServerResponse } from "../../server-api/response/server-response";
 export type RouteHandler = {
   handler: Function;
   parameters: [number, RouteHandlerParameter][];
 };
-import { ServerError } from "../error/ServerError";
-import { MiddleWareResponse } from "../server-api/response/middleware-response";
+import { ServerError } from "../../error/ServerError";
+import { MiddleWareResponse } from "../../server-api/response/middleware-response";
 
 export interface IControllerContext {
   addController(

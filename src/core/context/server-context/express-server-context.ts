@@ -1,21 +1,21 @@
 import express, { RequestHandler } from "express";
 import http from "http";
 import cors from "cors";
-import { ServerConfig } from "../../server-api/server-config";
-import { HttpMethod } from "../../common/http-util";
-import { getKeyPairValue } from "../../common/id-util";
+import { ExpressServerConfig } from "../../config/express-server-config";
+import { HttpMethod } from "../../../common/http-util";
+import { getKeyPairValue } from "../../../common/id-util";
 
 export interface IExpressServerContext {
   boot(routeHandlers: Map<string, RequestHandler[]>): http.Server;
-  getServerConfig(): ServerConfig;
-  setServerConfig(config: ServerConfig): void;
+  getServerConfig(): ExpressServerConfig;
+  setServerConfig(config: ExpressServerConfig): void;
   setPreconfigCb(cb: (app: express.Express) => void): void;
 }
 
 export class ExpressServerContext implements IExpressServerContext {
   constructor(
     private app: express.Express = express(),
-    private serverConfig: ServerConfig = new ServerConfig(),
+    private serverConfig: ExpressServerConfig = new ExpressServerConfig(),
     private preConfigCb: (app: express.Express) => void = () => {}
   ) {}
 
@@ -58,7 +58,7 @@ export class ExpressServerContext implements IExpressServerContext {
     return this.serverConfig;
   }
 
-  public setServerConfig(config: ServerConfig): void {
+  public setServerConfig(config: ExpressServerConfig): void {
     this.serverConfig = config;
   }
 

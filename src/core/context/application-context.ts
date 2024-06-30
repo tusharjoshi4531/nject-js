@@ -1,15 +1,15 @@
-import { Constructor } from "../common/component-util";
-import { ExpressApplication } from "../server-api/application/application";
-import { ServerConfig } from "../server-api/server-config";
+import { Constructor } from "../../common/component-util";
+import { ExpressApplication } from "../../server-api/application/application";
+import { ExpressServerConfig } from "../config/express-server-config";
 import ComponentContext, { IComponentContext } from "./component-context";
 import { ControllerContext, IControllerContext } from "./controller-context";
 import {
   ExpressServerContext,
   IExpressServerContext,
 } from "./server-context/express-server-context";
-import { HttpMethod } from "../common/http-util";
-import { RouteHandlerParameter } from "../common/server-util";
-import { rootControllerKey } from "../common/id-util";
+import { HttpMethod } from "../../common/http-util";
+import { RouteHandlerParameter } from "../../common/server-util";
+import { rootControllerKey } from "../../common/id-util";
 import { ComponentConstructorRepository } from "../repository/component-constructor-repository";
 import { ComponentObjectRepository } from "../repository/component-object-repository";
 import { ControllerRepository } from "../repository/controller-repository";
@@ -104,6 +104,8 @@ class ApplicationContext implements IComponentContext, IControllerContext {
         this.expressServerApplication?.preConfigExpress(e)
       );
     }
+
+    const httpSErver = this.expressContext.boot(this.getRouteHandlers());
   }
 
   public getComponent(id: string) {

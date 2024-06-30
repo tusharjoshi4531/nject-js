@@ -1,4 +1,4 @@
-export class ServerConfig {
+export class ExpressServerConfig  {
   port: number | string;
   corsOrigins: string | string[];
   corsMethods: string | string[];
@@ -11,27 +11,27 @@ export class ServerConfig {
     this.allowedHeaders = "*";
   }
 
-  public setPort(port: number | string): ServerConfig {
+  public setPort(port: number | string): ExpressServerConfig {
     this.port = port;
     return this;
   }
 
-  public setCorsOrigins(origins: string | string[]): ServerConfig {
+  public setCorsOrigins(origins: string | string[]): ExpressServerConfig {
     this.corsOrigins = origins;
     return this;
   }
 
-  public setCorsMethods(methods: string | string[]): ServerConfig {
+  public setCorsMethods(methods: string | string[]): ExpressServerConfig {
     this.corsMethods = methods;
     return this;
   }
 
-  public setAllowedHeaders(headers: string | string[]): ServerConfig {
+  public setAllowedHeaders(headers: string | string[]): ExpressServerConfig {
     this.allowedHeaders = headers;
     return this;
   }
 
-  public static create(): ServerConfig {
-    return new ServerConfig();
+  public static create(): ExpressServerConfig {
+    return new ExpressServerConfig();
   }
 }

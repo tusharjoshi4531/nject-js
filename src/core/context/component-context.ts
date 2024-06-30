@@ -1,4 +1,4 @@
-import { Constructor } from "../common/component-util";
+import { Constructor } from "../../common/component-util";
 import { ComponentConstructorRepository } from "../repository/component-constructor-repository";
 import { ComponentObjectRepository } from "../repository/component-object-repository";
 

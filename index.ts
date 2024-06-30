@@ -2,7 +2,7 @@ import { ExpressApplication } from "./src/server-api/application/application";
 import { Application } from "./src/server-api/application/application-decorator";
 import { RestController } from "./src/server-api/controller/rest/rest-controller-decorator";
 
-import { ServerConfig } from "./src/server-api/server-config";
+import { ExpressServerConfig } from "./src/core/config/express-server-config";
 import { GET } from "./src/server-api/controller/rest/rest-handler-decorator";
 
 import { ServerResponse } from "./src/server-api/response/server-response";
@@ -41,7 +41,7 @@ class TestController {
 @Application
 class MainApplication extends ExpressApplication {
   public override get Config() {
-    return ServerConfig.create().setPort(8000);
+    return ExpressServerConfig.create().setPort(8000);
   }
 
   public override preConfigExpress(app: Express): void {

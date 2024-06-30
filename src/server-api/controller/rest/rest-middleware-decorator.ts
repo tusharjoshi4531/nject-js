@@ -3,7 +3,7 @@ import {
   createControllerIdFromConstructor,
   createFunctionId,
 } from "../../../common/id-util";
-import applicationContext from "../../../context/application-context";
+import applicationContext from "../../../core/context/application-context";
 
 export class MiddlewareRoute {
   constructor(

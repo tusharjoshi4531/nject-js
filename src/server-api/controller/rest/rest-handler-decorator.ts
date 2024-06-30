@@ -1,6 +1,6 @@
-import applicationContext from "../../../context/application-context";
+import applicationContext from "../../../core/context/application-context";
 import { HttpMethod } from "../../../common/http-util";
-import { HandlerRepository } from "../../../repository/handler-repository";
+import { HandlerRepository } from "../../../core/repository/handler-repository";
 import {
   createControllerIdFromConstructor,
   createFunctionId,

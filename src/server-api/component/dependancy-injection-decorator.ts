@@ -1,6 +1,6 @@
 import { Constructor } from "../../common/component-util";
 import { createComponentIdFromConstructor } from "../../common/id-util";
-import applicationContext from "../../context/application-context";
+import applicationContext from "../../core/context/application-context";
 
 export function Inject(parameterConstructor: Constructor) {
   return function (

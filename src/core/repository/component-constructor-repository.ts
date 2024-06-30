@@ -1,4 +1,4 @@
-import { Constructor } from "../common/component-util";
+import { Constructor } from "../../common/component-util";
 
 export class ComponentConstructorRepository {
   private componentConstrutorMap: Map<string, Constructor>;

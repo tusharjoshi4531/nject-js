@@ -1,4 +1,4 @@
-import { RouteHandlerParameter } from "../common/server-util";
+import { RouteHandlerParameter } from "../../common/server-util";
 
 export class HandlerRepository {
   private parameterMap: Map<string, Array<[number, RouteHandlerParameter]>>;

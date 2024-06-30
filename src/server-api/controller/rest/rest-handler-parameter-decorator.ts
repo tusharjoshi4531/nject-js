@@ -1,6 +1,6 @@
 import { createFunctionId } from "../../../common/id-util";
 import { RouteHandlerParameter } from "../../../common/server-util";
-import applicationContext from "../../../context/application-context";
+import applicationContext from "../../../core/context/application-context";
 
 export function ControllerParameter(parameterType: RouteHandlerParameter) {
   return function (
